@@ -1,13 +1,12 @@
 <?php
-
-	require_once('/var/www/boca/src/db.php');
+	$path = "/var/www/html/bocamodif/src/db.php";
+	require "$path";
 	$contestnumber = 1;
 	$locr = "/var/www/boca/src";
 
 	//Crear ZIP
-	if(isset($_POST['Submit5']) && $_POST['Submit5']=='Enviar') {
-		if(isset($_POST['basename']) && isset($_POST['fullname']) && isset($_POST['timelimit'])){ 
-
+		if(isset($_POST['basename']) && isset($_POST['fullname']) && isset($_POST['timelimit'])){
+			
 			if ($_FILES["probleminput"]["name"] != "") {
 				$type=myhtmlspecialchars($_FILES["probleminput"]["type"]);
 				$size=myhtmlspecialchars($_FILES["probleminput"]["size"]);
@@ -16,37 +15,23 @@
 				if (!is_uploaded_file($temp)) {
 					ob_end_flush();
 					IntrusionNotify("file upload problem.");
-					ForceLoad("http://localhost/elgg/tap_editor");
+					ForceLoad("index.php");
 				}
 			} else $name = "";
+			
 			if ($_FILES["problemsol"]["name"] != "") {
 				$type1=myhtmlspecialchars($_FILES["problemsol"]["type"]);
 				$size1=myhtmlspecialchars($_FILES["problemsol"]["size"]);
 				$name1=myhtmlspecialchars($_FILES["problemsol"]["name"]);
 				$temp1=myhtmlspecialchars($_FILES["problemsol"]["tmp_name"]);
-
 				if (!is_uploaded_file($temp1)) {
 					ob_end_flush();
 					IntrusionNotify("file upload problem.");
-					ForceLoad("http://localhost/elgg/tap_editor");
+					ForceLoad("index.php");
 				}
 			} else $name1 = "";
 
-			
-			$archivo= "/var/www/html/run/prob.txt";
-			$fch= fopen($archivo, "w"); 
-			fwrite($fch, $_POST['problemdesc']); 
-			fclose($fch);
-
-			if (isset($archivo) && basename($archivo) != "") {
-				$type2=myhtmlspecialchars(mime_content_type($archivo));
-				$size2=myhtmlspecialchars(filesize($archivo));
-				$name2=myhtmlspecialchars(basename($archivo));
-				$temp2=myhtmlspecialchars($archivo);
-
-			} else $name2 = "";
-
-			/*if (isset($_FILES["problemdesc"]) && $_FILES["problemdesc"]["name"] != "") {
+			if (isset($_FILES["problemdesc"]) && $_FILES["problemdesc"]["name"] != "") {
 				$type2=myhtmlspecialchars($_FILES["problemdesc"]["type"]);
 				$size2=myhtmlspecialchars($_FILES["problemdesc"]["size"]);
 				$name2=myhtmlspecialchars($_FILES["problemdesc"]["name"]);
@@ -56,7 +41,7 @@
 					IntrusionNotify("file upload problem.");
 					ForceLoad("index.php");
 				}
-			} else $name2 = "";*/
+			} else $name2 = "";
 
 			$ds = DIRECTORY_SEPARATOR;
 			if($ds=="") $ds = "/";
@@ -66,7 +51,6 @@
 			if($tmpdir=="") $tmpdir = $ds . "tmp";
 
 			$tfile = tempnam($tmpdir, "problem");
-
 			if(@mkdir($tfile . "_d", 0700)) {
 				$dir = $tfile . "_d";
 				@mkdir($dir . $ds . 'limits');
@@ -81,7 +65,7 @@
 							   'compile' . $ds . 'c','compile' . $ds . 'cpp','compile' . $ds . 'java',
 							   'run' . $ds . 'c','run' . $ds . 'cpp','run' . $ds . 'java');
 				foreach($filea as $file) {
-					 $rfile='..' . $ds.'..' . $ds. 'boca' . $ds . 'doc' . $ds . 'problemexamples' . $ds . 'problemtemplate' . $ds . $file;
+					 $rfile='/var/www' . $ds. 'boca' . $ds . 'doc' . $ds . 'problemexamples' . $ds . 'problemtemplate' . $ds . $file;
 					if(is_readable($rfile)) {
 						@copy($rfile, $dir . $ds . $file);
 					} else {
@@ -89,7 +73,7 @@
 						cleardir($dir);
 						ob_end_flush();
 						MSGError('Could not read problem template file ' . $rfile);
-						ForceLoad('http://localhost/elgg/tap');
+						ForceLoad('admin.php');
 					}
 				}
 				$tl = explode(',',$_POST['timelimit']);
@@ -119,7 +103,7 @@
 					cleardir($dir);
 					ob_end_flush();
 					MSGError('Could not read problem input/output files');
-					ForceLoad('http://localhost/elgg/tap');
+					ForceLoad('admin.php');
 				}
 
 				$ret=create_zip($dir, glob($dir . $ds . '*'),$dir . '.zip');
@@ -130,16 +114,19 @@
 					@unlink($dir . '.zip');
 					ob_end_flush();
 					MSGError('Could not write to zip file');
-					ForceLoad('http://localhost/elgg/tap');
+					ForceLoad('admin.php');
 				}
 
+				require_once("incremento.php");
 
-				//Falta fullname y basename
-				//$str = file_get_contents($dir . '.zip');
+				$problemnum = Ejecutar::postgres();
+
+				$descripcion = $_POST["problemdesc"];
+
+			  Ejecutar::maicicuel($problemnum, $descripcion, trim($_POST['problemname']));
+
 				$param = array();
-				$param['fullname'] = $_POST["fullname"];
-				$param['basename'] = $_POST["basename"];
-				$param['number'] = $_POST["problemnumber"];
+				$param['number'] = $problemnum;
 				$param['name'] = trim($_POST["problemname"]);
 				$param['inputfilename'] = /*"Prueba2";*/$_POST["inputfilename"];
 				$param['inputfilepath'] = basename($dir . '.zip');
@@ -147,13 +134,14 @@
 				$param['colorname'] = "";//$_POST["colorname"]
 				$param['color'] ="";// $_POST["color"]
 				DBNewProblem ($contestnumber, $param);
-
+				
 				
 				@unlink($dir . '.zip');
 				@unlink($tfile);
 				ob_end_flush();
-				ForceLoad("http://localhost/elgg/tap");
-				exit;
+				echo "<script language=\"JavaScript\">\n";
+				echo "document.location='http://localhost/elgg/tap';\n";
+				echo "</script></html>\n";
 			} 
 			else {
 				@unlink($tfile);
@@ -161,8 +149,6 @@
 				MSGError('Could not write to temporary directory');
 			}
 		}
-	ForceLoad('http://localhost/elgg/tap');
-	}
 
-ForceLoad("http://localhost/elgg/tap");
+
 ?>

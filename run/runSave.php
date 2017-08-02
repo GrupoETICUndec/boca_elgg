@@ -1,11 +1,10 @@
 <?php
-require_once('../boca/src/db.php');
+include('../bocamodif/src/db.php');
 
-$usernumber=1;
+$usernumber=$_POST['usernumber'];
 $contestnumber=1; //$_SESSION["usertable"]["contestnumber"]
 $usersitenumber = 1;  //$_SESSION["usertable"]["$usersitenumber"]
 $usertype="team"; //$_SESSION["usertable"]["usertype"]
-$username="rex"; //$_SESSION["usertable"]["username"]
 $locr =""; //$_SESSION["locr"]
 //$forceredo ???
 $ds = DIRECTORY_SEPARATOR;
@@ -26,6 +25,7 @@ if (!isset($_POST["problem"])){
     exit;
 }
 $prob = myhtmlspecialchars($_POST["problem"]);
+
 if(!is_numeric($prob)) {
     $probs = DBGetProblems($contestnumber,$usertype=='judge');
     // busco el nombre del problema y lo reemplazo por su código
@@ -36,7 +36,7 @@ if(!is_numeric($prob)) {
         }
     }
 }
-
+echo "hasta aca".$prob;
 
 
 if (!isset($_POST["language"])){
@@ -57,7 +57,7 @@ if(!is_numeric($lang)) {
 }
 
 if ((isset($_FILES["sourcefile"]) && $_FILES["sourcefile"]["name"]!="") || (isset($_POST["data"]) && isset($_POST["name"]))) {
-	if ($_POST["confirmation"] == "confirm" || (isset($_POST["data"]) && isset($_POST["name"]))) {
+	//~ if ($_POST["confirmation"] == "confirm" || (isset($_POST["data"]) && isset($_POST["name"]))) {
 		
 		if(isset($_POST['name']) && $_POST['name'] != '') {
 			$temp = tempnam("/tmp","bkp-");
@@ -108,9 +108,11 @@ if ((isset($_FILES["sourcefile"]) && $_FILES["sourcefile"]["name"]!="") || (isse
 					   'lang'=>$lang,
 					   'filename'=>$name,
 					   'filepath'=>$temp);
+		
 
+		
 		$retv = DBNewRun ($param);
-	}
+	
 }
 header('Location: run.php');
 ?>
