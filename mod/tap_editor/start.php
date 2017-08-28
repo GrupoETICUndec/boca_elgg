@@ -35,10 +35,10 @@
 								</textarea>
 				
 								<script>
-									require([\'elgg/ckeditor\'], 
+									require(['elgg/ckeditor'], 
 										function (elggCKEditor) 
 										{
-											elggCKEditor.bind(\'.elgg-input-longtext\');
+											elggCKEditor.bind('.elgg-input-longtext');
 										});
 								</script>
 
